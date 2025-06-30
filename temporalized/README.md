@@ -24,7 +24,7 @@ The system is split into several components:
 
 1. **Temporal Server**: Install and run Temporal locally or use Temporal Cloud
 2. **AWS Account**: With S3 buckets and appropriate permissions
-3. **OpenAI API Key**: For image enhancement
+3. **OpenAI API Key**: For image enhancement (with credits)
 4. **Python 3.8+**
 
 ## Installation
