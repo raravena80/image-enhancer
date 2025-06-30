@@ -164,4 +164,4 @@ logging.basicConfig(level=logging.DEBUG)
 
 ## License
 
-This project is licensed under Apache 2.0 License.
+This project is licensed under the MIT License.
