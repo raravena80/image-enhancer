@@ -74,14 +74,14 @@ python run_workflow.py
 
 You should see output like:
 ```
-2024-01-15 10:31:00,123 - __main__ - INFO - Processing: s3://ricardotemporal/funny.png -> s3://ricardotemporalprocessed/enhanced_funny.png
+2024-01-15 10:31:00,123 - __main__ - INFO - Processing: s3://temporal-s3-bucket/funny.png -> s3://temporal-s3-bucket-processed/enhanced_funny.png
 2024-01-15 10:31:00,456 - __main__ - INFO - Starting workflow with ID: image-enhancement-12345678-1234-1234-1234-123456789012
 2024-01-15 10:31:00,789 - __main__ - INFO - Workflow started. Workflow ID: image-enhancement-12345678-1234-1234-1234-123456789012
 2024-01-15 10:31:00,012 - __main__ - INFO - Waiting for workflow to complete...
 2024-01-15 10:31:45,345 - __main__ - INFO - Workflow completed successfully!
-2024-01-15 10:31:45,678 - __main__ - INFO - Result: Successfully processed image: s3://ricardotemporal/funny.png -> s3://ricardotemporalprocessed/enhanced_funny.png
+2024-01-15 10:31:45,678 - __main__ - INFO - Result: Successfully processed image: s3://temporal-s3-bucket/funny.png -> s3://temporal-s3-bucket-processed/enhanced_funny.png
 
-✅ Success: Successfully processed image: s3://ricardotemporal/funny.png -> s3://ricardotemporalprocessed/enhanced_funny.png
+✅ Success: Successfully processed image:s3://temporal-s3-bucket/funny.png -> s3://temporal-s3-bucket-processed/enhanced_funny.png
 ```
 
 ## Configuration
