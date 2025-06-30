@@ -31,7 +31,7 @@ DEST_BUCKET=your-dest-bucket
 ## 📖 Documentation
 
 - [Original Setup Guide](SETUP.md) - Detailed installation and configuration
-- [Original Code](origina/image-enhancer.py) - Full original code
+- [Original Code](original/image-enhancer.py) - Full original code
 
 ## 🤝 Contributing
 
