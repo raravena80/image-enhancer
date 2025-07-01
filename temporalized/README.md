@@ -149,7 +149,16 @@ The system includes comprehensive error handling:
 
 ### Debug Mode
 
-Enable debug logging by modifying the logging level:
+Enable debug logging by modifying the logging level
+
+In the .env file:
+
+```bash
+LOG_LEVEL=DEBUG
+```
+
+or in the code itself:
+
 ```python
 logging.basicConfig(level=logging.DEBUG)
 ```
