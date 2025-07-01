@@ -243,7 +243,7 @@ This project is licensed under the Apache 2.0 License - see the [LICENSE](../LIC
 ## Support
 
 For issues and questions:
-1. Check the [Issues](../../issues) page
+1. Check the [Issues](https://github.com/raravena80/image-enhancer/issues) page
 2. Review the error logs for detailed error messages
 3. Ensure all prerequisites and configurations are correct
 
