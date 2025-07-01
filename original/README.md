@@ -118,10 +118,26 @@ enhancer.process_image(
 Update the configuration in the `main()` function and run:
 
 ```bash
-python original.py
+python image-enhancer.py
 ```
 
-## API Reference
+Sample output:
+
+```bash
+INFO:__main__:Downloading image from s3://mybucket/funny.png
+INFO:__main__:Image downloaded to temporary file: /var/folders/c0/y4j9mnd51yd8s3yyrd4pq7fr0000gn/T/tmpyb_yo5zq.png
+INFO:__main__:Enhancing image with OpenAI...
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/images/edits "HTTP/1.1 200 OK"
+INFO:__main__:Image enhancement completed: /var/folders/c0/y4j9mnd51yd8s3yyrd4pq7fr0000gn/T/tmpkptwvsm9.png
+INFO:__main__:Uploading processed image to s3://mybucketprocessed/enhanced_funny.png
+INFO:__main__:Upload completed successfully
+INFO:__main__:Successfully processed image: mybucket/funny.png -> mybucketprocessed/enhanced_funny.png
+INFO:__main__:Cleaned up temporary file: /var/folders/c0/y4j9mnd51yd8s3yyrd4pq7fr0000gn/T/tmpyb_yo5zq.png
+INFO:__main__:Cleaned up temporary file: /var/folders/c0/y4j9mnd51yd8s3yyrd4pq7fr0000gn/T/tmpkptwvsm9.png
+Image processing completed successfully!
+```
+
+## Code Reference
 
 ### ImageEnhancer Class
 
@@ -222,7 +238,7 @@ The tool automatically detects image formats and sets appropriate content types.
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the Apache 2.0 License - see the [LICENSE](../LICENSE) file for details.
 
 ## Support
 
