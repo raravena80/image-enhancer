@@ -59,7 +59,6 @@ async def download_image_from_s3(config: ImageProcessingConfig, s3_location: S3L
                 aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY')
             )
 
-        logger.info(f"config HERE: {config}")
         # Create a temporary file
         temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.png')
         temp_file_path = temp_file.name
