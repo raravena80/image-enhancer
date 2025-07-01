@@ -109,26 +109,6 @@ You should see output like:
 2. **Logs**: Check worker and client logs for detailed execution information
 3. **AWS CloudWatch**: Monitor S3 operations and errors
 
-## Scaling
-
-To scale the system:
-
-1. **Horizontal Scaling**: Run multiple worker instances
-```bash
-# Terminal 1
-python worker.py
-
-# Terminal 2  
-python worker.py
-
-# Terminal 3
-python worker.py
-```
-
-2. **Task Queue Partitioning**: Use different task queues for different types of work
-
-3. **Resource Optimization**: Adjust activity timeouts and retry policies based on your needs
-
 ## Error Handling
 
 The system includes comprehensive error handling:
@@ -170,6 +150,27 @@ logging.basicConfig(level=logging.DEBUG)
 3. **Scaling**: Use Temporal Cloud for production workloads
 4. **Cost Optimization**: Monitor OpenAI API usage and AWS costs
 5. **Image Size Limits**: Consider implementing image size validation
+
+## Future Work
+
+Scale the system:
+
+1. **Horizontal Scaling**: Run multiple worker instances
+```bash
+# Terminal 1
+python worker.py
+
+# Terminal 2  
+python worker.py
+
+# Terminal 3
+python worker.py
+```
+
+2. **Task Queue Partitioning**: Use different task queues for different types of work
+
+3. **Resource Optimization**: Adjust activity timeouts and retry policies based on your needs
+
 
 ## License
 
