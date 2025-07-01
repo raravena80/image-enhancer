@@ -5,12 +5,16 @@ import tempfile
 from PIL import Image
 import base64
 from openai import OpenAI
+from dotenv import load_dotenv
 from botocore.exceptions import ClientError
 import logging
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+# Load environment variables
+load_dotenv()
 
 class ImageEnhancer:
     def __init__(self, aws_access_key_id=None, aws_secret_access_key=None, 
@@ -217,17 +221,24 @@ def main():
     Example usage of the ImageEnhancer class.
     """
     # Configuration
-    SOURCE_BUCKET = "ricardotemporal"
-    SOURCE_KEY = "funny.png"
-    DEST_BUCKET = "ricardotemporalprocessed"
-    DEST_KEY = "enhanced_funny.png"
+    SOURCE_BUCKET = os.getenv("SOURCE_BUCKET")
+    SOURCE_KEY = os.getenv("SOURCE_KEY")
+    DEST_BUCKET = os.getenv("DEST_BUCKET")
+    DEST_KEY = os.getenv("DEST_KEY")
     
     # Enhancement prompt
-    ENHANCEMENT_PROMPT = "Make this image more vibrant, increase clarity and sharpness, improve lighting"
+    ENHANCEMENT_PROMPT = os.getenv("ENHANCEMENT_PROMPT")
+    if not ENHANCEMENT_PROMPT:
+        ENHANCEMENT_PROMPT = "Make this image more vibrant, increase clarity and sharpness, improve lighting"
+
+    keyid = os.getenv("AWS_ACCESS_KEY_ID")
+    secretid = os.getenv("AWS_SECRET_ACCESS_KEY")
     
     try:
         # Initialize the enhancer
         enhancer = ImageEnhancer(
+            aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
+            aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY"),
             aws_region='us-east-1',  # Change to your preferred region
             # openai_api_key='your-openai-api-key'  # Or set OPENAI_API_KEY environment variable
         )
