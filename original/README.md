@@ -22,7 +22,7 @@ A Python tool that automatically downloads images from AWS S3, enhances them usi
 
 1. Clone the repository:
 ```bash
-git clone <your-repository-url>
+git clone git@github.com:raravena80/image-enhancer.git
 cd image-enhancer
 ```
 
@@ -70,7 +70,7 @@ You must provide an OpenAI API key either:
 
 ## Usage
 
-### Basic Usage
+### Basic Code Usage
 
 ```python
 from image_enhancer import ImageEnhancer
@@ -87,6 +87,7 @@ enhancer.process_image(
     enhancement_prompt='Make this image more vibrant and clear'
 )
 ```
+Note that variables above are originally picked up from .env file
 
 ### Advanced Usage
 
@@ -112,10 +113,11 @@ enhancer.process_image(
     enhancement_prompt=custom_prompt
 )
 ```
+Note that variables above are originally picked up from .env file
 
 ### Running the Example
 
-Update the configuration in the `main()` function and run:
+Run:
 
 ```bash
 python image-enhancer.py
@@ -153,39 +155,6 @@ ImageEnhancer(aws_access_key_id=None, aws_secret_access_key=None,
 - `aws_secret_access_key` (str, optional): AWS secret access key  
 - `aws_region` (str): AWS region (default: 'us-east-1')
 - `openai_api_key` (str, optional): OpenAI API key
-
-#### Methods
-
-##### `process_image(source_bucket, source_key, dest_bucket, dest_key, enhancement_prompt)`
-
-Complete workflow to download, enhance, and upload an image.
-
-**Parameters:**
-- `source_bucket` (str): Source S3 bucket name
-- `source_key` (str): Source object key/path
-- `dest_bucket` (str): Destination S3 bucket name
-- `dest_key` (str): Destination object key/path
-- `enhancement_prompt` (str): Description of desired enhancements
-
-##### `download_image_from_s3(bucket_name, object_key)`
-
-Download an image from S3 to a temporary file.
-
-**Returns:** Path to downloaded temporary file
-
-##### `enhance_image_with_openai(image_path, enhancement_prompt)`
-
-Enhance an image using OpenAI's DALL-E API.
-
-**Returns:** Path to enhanced image file
-
-##### `upload_image_to_s3(image_path, bucket_name, object_key, content_type)`
-
-Upload an image file to S3.
-
-##### `cleanup_temp_files(*file_paths)`
-
-Clean up temporary files.
 
 ## Error Handling
 

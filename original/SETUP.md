@@ -184,7 +184,5 @@ export AWS_SECRET_ACCESS_KEY="your-secret"
 Once setup is complete, you can:
 - Customize enhancement prompts for different use cases
 - Integrate with Lambda for serverless processing
-- Add batch processing capabilities
+- Add temporal processing capabilities (See temporalized example)
 - Implement webhooks for automatic processing
-
-For more advanced usage, see the main [README.md](README.md) file.
