@@ -39,7 +39,7 @@ DEST_BUCKET=your-dest-bucket
 
 ## 🤝 Contributing
 
-Contributions welcome! Please read our contributing guidelines and submit pull requests.
+Contributions welcome! Please read general open source contribution guidelines. For example: [Kubernetes Guidelines](https://github.com/kubernetes/community/blob/master/contributors/guide/contributing.md)
 
 ## 📄 License
 
