@@ -15,7 +15,7 @@ AI-powered image enhancement tool that downloads images from AWS S3, enhances th
 - Python 3.7+
 - OpenAI API key
 - AWS S3 access
-- Required packages: `boto3`, `openai`, `Pillow`, `requests`
+- Required packages: `boto3`, `openai`, `Pillow`, `requests`, `python-dotenv`
 
 ## 🔧 General Configuration
 
@@ -32,6 +32,10 @@ DEST_BUCKET=your-dest-bucket
 
 - [Original Setup Guide](SETUP.md) - Detailed installation and configuration
 - [Original Code](original/image-enhancer.py) - Full original code
+
+## 🔄 Temporalized Version (Recommended)
+
+- See its [README.md](temporalized/README.md)
 
 ## 🤝 Contributing
 
