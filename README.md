@@ -19,14 +19,7 @@ AI-powered image enhancement tool that downloads images from AWS S3, enhances th
 
 ## 🔧 General Configuration
 
-Create a `.env` file:
-```bash
-OPENAI_API_KEY=your_openai_api_key
-AWS_ACCESS_KEY_ID=your_aws_access_key  # Optional
-AWS_SECRET_ACCESS_KEY=your_aws_secret   # Optional
-SOURCE_BUCKET=your-source-bucket
-DEST_BUCKET=your-dest-bucket
-```
+- See [SETUP.md](original/SETUP.md)
 
 ## 📖 Documentation
 
@@ -36,6 +29,31 @@ DEST_BUCKET=your-dest-bucket
 ## 🔄 Temporalized Version (Recommended)
 
 - See its [README.md](temporalized/README.md)
+
+### ❓ Why?
+
+#### 🤷 What Happens When It Fails?
+
+- Processing 1,000 images overnight → Fails at #847 → Start over
+- OpenAI API timeout → Manual restart required
+- Network hiccup during S3 upload → Lost work
+- Application crash → No recovery
+
+#### ⚡ With Temporal
+
+Automatic Everything:
+
+✅ Crash recovery: Continues exactly where it left off  
+✅ Smart retries: Failed API calls retry automatically  
+✅ No lost work: All progress saved continuously  
+✅ Scales effortlessly: Handle thousands of images concurrently  
+✅ Full visibility: Real-time monitoring and debugging  
+
+- Original version:
+  - Runs 6 hours → Fails at image #847 → Start over → Manual babysitting
+- Temporal version:
+  - Processes 1000 successfully → Network issue → Retries automatically → Completes remaining → Zero intervention
+
 
 ## 🤝 Contributing
 
