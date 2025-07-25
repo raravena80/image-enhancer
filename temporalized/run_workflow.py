@@ -1,3 +1,9 @@
+"""
+This script runs batch image enhancement workflows using Temporal.
+
+It parses image configuration, connects to the Temporal server, and
+manages the execution of multiple image enhancement workflows in parallel or sequentially.
+"""
 import asyncio
 import logging
 from temporalio.client import Client

@@ -1,3 +1,14 @@
+"""
+This module defines the Temporal workflow for image enhancement.
+
+The workflow orchestrates the following steps:
+- Download image from S3
+- Enhance image using OpenAI
+- Upload enhanced image to S3
+- Cleanup temporary files
+
+Intended for use with Temporal workers and activities for automated image processing pipelines.
+"""
 from datetime import timedelta
 from temporalio import workflow
 from temporalio.common import RetryPolicy

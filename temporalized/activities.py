@@ -1,3 +1,14 @@
+"""
+This module defines Temporal activities for image processing workflows.
+
+Activities include:
+- Downloading images from AWS S3
+- Enhancing images using OpenAI's DALL-E API
+- Uploading images to S3
+- Cleaning up temporary files
+
+Designed for use with Temporal workflows to automate image enhancement pipelines.
+"""
 import boto3
 import os
 import tempfile

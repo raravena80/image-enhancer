@@ -1,3 +1,9 @@
+"""
+This script runs a single image enhancement workflow using Temporal.
+
+It loads configuration from environment variables, connects to the Temporal
+server, and executes the workflow for "one" image, suitable for testing or single-job runs.
+"""
 import asyncio
 import logging
 from temporalio.client import Client

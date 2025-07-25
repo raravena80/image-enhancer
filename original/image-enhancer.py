@@ -1,3 +1,14 @@
+"""
+This module provides the ImageEnhancer class for processing and enhancing images using AWS S3 and OpenAI's DALL-E API.
+
+Features:
+- Download images from S3
+- Enhance images using OpenAI
+- Upload enhanced images back to S3
+- Utility methods for image conversion and cleanup
+
+Intended for use as a standalone script or as an importable module for image enhancement workflows.
+"""
 import boto3
 import os
 import requests

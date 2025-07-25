@@ -1,3 +1,8 @@
+"""
+This script starts a Temporal worker for image enhancement workflows.
+
+It connects to a Temporal server, registers the workflow and activities, and runs the worker to process image enhancement tasks using AWS S3 and OpenAI.
+"""
 import asyncio
 import logging
 from temporalio import activity, workflow
