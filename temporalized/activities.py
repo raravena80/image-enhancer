@@ -82,7 +82,7 @@ async def download_image_from_s3(config: ImageProcessingConfig, s3_location: S3L
         return temp_file_path
         
     except ClientError as e:
-        logger.error(f"Error downloading from S3: {e}")
+        logger.error(f"Error downloading from S3 (bucket={s3_location.bucket}, key={s3_location.key}): {e}")
         raise
 
 @activity.defn
@@ -137,7 +137,7 @@ async def enhance_image_with_openai(config: ImageProcessingConfig, image_path: s
         return enhanced_file_path
         
     except Exception as e:
-        logger.error(f"Error enhancing image with OpenAI: {e}")
+        logger.error(f"Error enhancing image with OpenAI (image_path={image_path}, prompt={enhancement_prompt}): {e}")
         raise
 
 @activity.defn
@@ -191,7 +191,7 @@ async def upload_image_to_s3(config: ImageProcessingConfig, image_path: str,
         logger.info("Upload completed successfully")
         
     except ClientError as e:
-        logger.error(f"Error uploading to S3: {e}")
+        logger.error(f"Error uploading to S3 (bucket={s3_location.bucket}, key={s3_location.key}, image_path={image_path}): {e}")
         raise
 
 @activity.defn

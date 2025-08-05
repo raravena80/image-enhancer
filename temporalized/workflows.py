@@ -95,7 +95,7 @@ class ImageEnhancementWorkflow:
             return f"Successfully processed image: s3://{source_location.bucket}/{source_location.key} -> s3://{dest_location.bucket}/{dest_location.key}"
             
         except Exception as e:
-            workflow.logger.error(f"Error in image processing workflow: {e}")
+            workflow.logger.error(f"Error in image processing workflow (source={source_location.bucket}/{source_location.key}, dest={dest_location.bucket}/{dest_location.key}, step=workflow): {e}")
             raise
         finally:
             # Clean up temporary files (fire and forget)

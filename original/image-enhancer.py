@@ -81,7 +81,7 @@ class ImageEnhancer:
             return temp_file_path
             
         except ClientError as e:
-            logger.error(f"Error downloading from S3: {e}")
+            logger.error(f"Error downloading from S3 (bucket={bucket_name}, key={object_key}): {e}")
             raise
     
     def image_to_base64(self, image_path):
@@ -140,7 +140,7 @@ class ImageEnhancer:
             return enhanced_file_path
             
         except Exception as e:
-            logger.error(f"Error enhancing image with OpenAI: {e}")
+            logger.error(f"Error enhancing image with OpenAI (image_path={image_path}, prompt={enhancement_prompt}): {e}")
             raise
     
     def upload_image_to_s3(self, image_path, bucket_name, object_key, content_type='image/jpeg'):
@@ -174,7 +174,7 @@ class ImageEnhancer:
             logger.info("Upload completed successfully")
             
         except ClientError as e:
-            logger.error(f"Error uploading to S3: {e}")
+            logger.error(f"Error uploading to S3 (bucket={bucket_name}, key={object_key}, image_path={image_path}): {e}")
             raise
     
     def cleanup_temp_files(self, *file_paths):
@@ -220,7 +220,7 @@ class ImageEnhancer:
             logger.info(f"Successfully processed image: {source_bucket}/{source_key} -> {dest_bucket}/{dest_key}")
             
         except Exception as e:
-            logger.error(f"Error in image processing workflow: {e}")
+            logger.error(f"Error in image processing workflow (source={source_bucket}/{source_key}, dest={dest_bucket}/{dest_key}, step=process_image): {e}")
             raise
         finally:
             # Clean up temporary files
@@ -263,10 +263,10 @@ def main():
             enhancement_prompt=ENHANCEMENT_PROMPT
         )
         
-        print("Image processing completed successfully!")
+        logger.info("Image processing completed successfully!")
         
     except Exception as e:
-        print(f"Error: {e}")
+        logger.error(f"Error: {e}")
 
 if __name__ == "__main__":
     main()

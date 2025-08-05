@@ -212,6 +212,8 @@ async def run_batch_image_workflows(max_concurrent: int = 5):
             else:
                 logger.error(f"❌ {result['source']}: {result.get('error', 'Unknown error')}")
                 failed += 1
+            percent = int(((i+1)/len(results))*100)
+            logger.info(f"Progress: {i+1}/{len(results)} ({percent}%)")
         
         # Summary
         logger.info(f"\n" + "="*80)
@@ -245,14 +247,14 @@ async def main():
         total = len(results)
         
         if successful == total:
-            print(f"\n🎉 All {total} images processed successfully!")
+            logger.info(f"All {total} images processed successfully!")
         else:
             failed = total - successful
-            print(f"\n⚠️  Processed {successful}/{total} images successfully ({failed} failed)")
+            logger.info(f"Processed {successful}/{total} images successfully ({failed} failed)")
             exit(1)
             
     except Exception as e:
-        print(f"\n❌ Error: {e}")
+        logger.error(f"Error: {e}")
         exit(1)
 
 if __name__ == "__main__":

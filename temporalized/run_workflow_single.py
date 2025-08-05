@@ -99,9 +99,9 @@ async def main():
     """
     try:
         result = await run_image_enhancement_workflow()
-        print(f"\n✅ Success: {result}")
+        logger.info(f"Success: {result}")
     except Exception as e:
-        print(f"\n❌ Error: {e}")
+        logger.error(f"Error: {e}")
         exit(1)
 
 if __name__ == "__main__":
