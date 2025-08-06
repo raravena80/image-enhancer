@@ -8,9 +8,10 @@ import argparse
 from datetime import datetime
 
 class WorkerManager:
-    def __init__(self, num_workers=4, show_logs=False):
+    def __init__(self, num_workers=4, show_logs=False, stagger_start=0.5):
         self.num_workers = num_workers
         self.show_logs = show_logs
+        self.stagger_start = stagger_start
         self.processes = []
         self.log_files = []
         # Get the directory where this script is located
@@ -101,6 +102,11 @@ class WorkerManager:
 
             self.processes.append(process)
             print(f"Worker {worker_id} started with PID: {process.pid}")
+
+            # Stagger worker starts to reduce initial task conflicts
+            if worker_id < self.num_workers:  # Don't wait after the last worker
+                import time
+                time.sleep(self.stagger_start)
 
     def stop_workers(self):
         """Stop all worker processes gracefully"""
@@ -231,16 +237,18 @@ def main():
     # Parse command line arguments
     parser = argparse.ArgumentParser(description='Start and manage Temporal workers')
     parser.add_argument('--workers', '-w', type=int, default=4,
-                        help='Number of workers to start (default: 4)')
+                        help='Number of workers to start (default: 2, reduced to minimize task conflicts)')
     parser.add_argument('--show-logs', action='store_true',
                         help='Display logs to stdout as well as files')
+    parser.add_argument('--stagger-start', type=float, default=0.5,
+                        help='Seconds to wait between starting each worker (default: 0.5)')
     args = parser.parse_args()
 
     # Set up signal handlers
     signal.signal(signal.SIGINT, signal_handler)
     signal.signal(signal.SIGTERM, signal_handler)
 
-    manager = WorkerManager(num_workers=args.workers, show_logs=args.show_logs)
+    manager = WorkerManager(num_workers=args.workers, show_logs=args.show_logs, stagger_start=args.stagger_start)
 
     try:
         manager.start_workers()

@@ -21,13 +21,17 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
-# Configure logging
+# Configure logging with better filtering
 log_level = getattr(logging, os.getenv('LOG_LEVEL', 'INFO').upper(), logging.INFO)
 logging.basicConfig(
     level=log_level,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
+
+# Reduce noise from Temporal SDK core warnings
+temporal_core_logger = logging.getLogger('temporal_sdk_core')
+temporal_core_logger.setLevel(logging.ERROR)  # Only show errors, not warnings
 
 async def main():
     """
@@ -46,7 +50,7 @@ async def main():
         # Connect to Temporal server
         client = await Client.connect(temporal_address, namespace=temporal_namespace)
 
-        # Create worker
+        # Create worker with valid configuration
         worker = Worker(
             client,
             task_queue=task_queue,
@@ -57,6 +61,9 @@ async def main():
                 upload_image_to_s3,
                 cleanup_temp_file
             ],
+            # Reduce concurrent tasks to minimize conflicts
+            max_concurrent_workflow_tasks=1,  # Limit concurrent workflow tasks per worker
+            max_concurrent_activities=3,      # Limit concurrent activities
         )
 
         logger.info("Starting worker...")
