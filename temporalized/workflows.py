@@ -70,6 +70,7 @@ class ImageEnhancementWorkflow:
                     download_image_from_s3,
                     args=[config, source_location],
                     start_to_close_timeout=timedelta(minutes=5),
+                    schedule_to_start_timeout=timedelta(minutes=1),
                     retry_policy=retry_policy
                 )
                 workflow.logger.info(f"✅ Step 1 completed: Downloaded to {original_image_path}")
@@ -84,6 +85,7 @@ class ImageEnhancementWorkflow:
                     enhance_image_with_openai,
                     args=[config, original_image_path, enhancement_prompt],
                     start_to_close_timeout=timedelta(minutes=10),
+                    schedule_to_start_timeout=timedelta(minutes=1),
                     retry_policy=retry_policy
                 )
                 workflow.logger.info(f"✅ Step 2 completed: Enhanced image saved to {enhanced_image_path}")
@@ -98,6 +100,7 @@ class ImageEnhancementWorkflow:
                     upload_image_to_s3,
                     args=[config, enhanced_image_path, dest_location, "image/png"],
                     start_to_close_timeout=timedelta(minutes=5),
+                    schedule_to_start_timeout=timedelta(minutes=1),
                     retry_policy=retry_policy
                 )
                 workflow.logger.info(f"✅ Step 3 completed: Uploaded to s3://{dest_location.bucket}/{dest_location.key}")

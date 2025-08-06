@@ -8,7 +8,7 @@ import argparse
 from datetime import datetime
 
 class WorkerManager:
-    def __init__(self, num_workers=4, show_logs=False, stagger_start=0.5):
+    def __init__(self, num_workers=5, show_logs=False, stagger_start=0.5):
         self.num_workers = num_workers
         self.show_logs = show_logs
         self.stagger_start = stagger_start
@@ -236,7 +236,7 @@ def signal_handler(signum, _frame):
 def main():
     # Parse command line arguments
     parser = argparse.ArgumentParser(description='Start and manage Temporal workers')
-    parser.add_argument('--workers', '-w', type=int, default=4,
+    parser.add_argument('--workers', '-w', type=int, default=5,
                         help='Number of workers to start (default: 2, reduced to minimize task conflicts)')
     parser.add_argument('--show-logs', action='store_true',
                         help='Display logs to stdout as well as files')

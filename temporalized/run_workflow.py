@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 """
 This script runs batch image enhancement workflows using Temporal.
 
@@ -6,7 +8,7 @@ manages the execution of multiple image enhancement workflows in parallel or seq
 """
 import asyncio
 import logging
-from temporalio.client import Client
+from temporalio.client import Client, RetryConfig, KeepAliveConfig
 from workflows import ImageEnhancementWorkflow
 from activities import ImageProcessingConfig, S3Location
 import os
@@ -203,7 +205,18 @@ async def run_batch_image_workflows(max_concurrent: int = 5):
 
     try:
         # Connect to Temporal server
-        client = await Client.connect(temporal_address, namespace=temporal_namespace)
+        client = await Client.connect(
+            temporal_address,
+            namespace=temporal_namespace,
+            retry_config=RetryConfig(
+                max_interval_millis=5000,
+                max_retries=3
+            ),
+            keep_alive_config=KeepAliveConfig(
+                interval_millis=10000,
+                timeout_millis=30000
+            )
+        )
 
         # Process images in batches
         results = []

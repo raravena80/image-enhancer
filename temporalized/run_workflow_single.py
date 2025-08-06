@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 """
 This script runs a single image enhancement workflow using Temporal.
 
