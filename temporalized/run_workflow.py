@@ -24,24 +24,29 @@ load_dotenv()
 log_level = getattr(logging, os.getenv('LOG_LEVEL', 'INFO').upper(), logging.INFO)
 logging.basicConfig(
     level=log_level,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    format='%(asctime)s - %(name)s - %(levelname)s - [%(filename)s:%(lineno)d] - %(message)s'
 )
 logger = logging.getLogger(__name__)
+
+# Enable debug logging for Temporal if requested
+if os.getenv('TEMPORAL_DEBUG', '').lower() == 'true':
+    logging.getLogger('temporalio').setLevel(logging.DEBUG)
+    logger.info("🔍 Temporal debug logging enabled")
 
 def parse_image_list(images_config: str) -> List[Dict[str, str]]:
     """
     Parse image configuration from environment variable.
     Supports both JSON format and simple comma-separated format.
-    
+
     JSON format:
     [{"source_bucket": "bucket1", "source_key": "image1.jpg", "dest_bucket": "bucket2", "dest_key": "enhanced_image1.jpg"}, ...]
-    
+
     Simple format (uses default buckets):
     image1.jpg,image2.png,folder/image3.jpeg
     """
     if not images_config:
         return []
-    
+
     # Try to parse as JSON first
     try:
         images = json.loads(images_config)
@@ -49,14 +54,14 @@ def parse_image_list(images_config: str) -> List[Dict[str, str]]:
             return images
     except json.JSONDecodeError:
         pass
-    
+
     # Parse as comma-separated list
     source_bucket = os.getenv('SOURCE_BUCKET', 'source-bucket')
     dest_bucket = os.getenv('DEST_BUCKET', 'dest-bucket')
-    
+
     image_keys = [key.strip() for key in images_config.split(',') if key.strip()]
     images = []
-    
+
     for key in image_keys:
         # Generate destination key by adding 'enhanced_' prefix
         dest_key = f"enhanced_{os.path.basename(key)}"
@@ -64,36 +69,36 @@ def parse_image_list(images_config: str) -> List[Dict[str, str]]:
             # Preserve folder structure
             folder = os.path.dirname(key)
             dest_key = f"{folder}/enhanced_{os.path.basename(key)}"
-        
+
         images.append({
             "source_bucket": source_bucket,
             "source_key": key,
             "dest_bucket": dest_bucket,
             "dest_key": dest_key
         })
-    
+
     return images
 
-async def run_single_image_workflow(client: Client, config: ImageProcessingConfig, 
-                                  image_config: Dict[str, str], task_queue: str, 
+async def run_single_image_workflow(client: Client, config: ImageProcessingConfig,
+                                  image_config: Dict[str, str], task_queue: str,
                                   enhancement_prompt: str) -> Dict[str, Any]:
     """
     Run workflow for a single image.
     """
     source_location = S3Location(
-        bucket=image_config['source_bucket'], 
+        bucket=image_config['source_bucket'],
         key=image_config['source_key']
     )
     dest_location = S3Location(
-        bucket=image_config['dest_bucket'], 
+        bucket=image_config['dest_bucket'],
         key=image_config['dest_key']
     )
-    
+
     # Generate a unique workflow ID
     workflow_id = f"image-enhancement-{uuid.uuid4()}"
-    
+
     logger.info(f"Starting workflow for: s3://{source_location.bucket}/{source_location.key}")
-    
+
     try:
         # Start the workflow
         handle = await client.start_workflow(
@@ -102,12 +107,12 @@ async def run_single_image_workflow(client: Client, config: ImageProcessingConfi
             id=workflow_id,
             task_queue=task_queue,
         )
-        
+
         # Wait for workflow to complete and get result
         start_time = time.time()
         result = await handle.result()
         end_time = time.time()
-        
+
         return {
             "workflow_id": workflow_id,
             "source": f"s3://{source_location.bucket}/{source_location.key}",
@@ -116,16 +121,38 @@ async def run_single_image_workflow(client: Client, config: ImageProcessingConfi
             "result": result,
             "duration_seconds": round(end_time - start_time, 2)
         }
-        
+
     except Exception as e:
-        logger.error(f"Error processing {source_location.bucket}/{source_location.key}: {e}")
+        end_time = time.time()
+        duration = round(end_time - start_time, 2) if 'start_time' in locals() else 0
+
+        # Enhanced error logging with more context
+        error_details = {
+            "workflow_id": workflow_id,
+            "source": f"{source_location.bucket}/{source_location.key}",
+            "error_type": type(e).__name__,
+            "error_message": str(e),
+            "duration_seconds": duration
+        }
+
+        logger.error(f"🚨 Workflow FAILED: {error_details['source']}")
+        logger.error(f"   └─ Workflow ID: {workflow_id}")
+        logger.error(f"   └─ Error Type: {error_details['error_type']}")
+        logger.error(f"   └─ Error Message: {error_details['error_message']}")
+        logger.error(f"   └─ Duration: {duration}s")
+
+        # Log the full exception with stack trace in debug mode
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(f"Full exception details for {workflow_id}:", exc_info=True)
+
         return {
             "workflow_id": workflow_id,
             "source": f"s3://{source_location.bucket}/{source_location.key}",
             "destination": f"s3://{dest_location.bucket}/{dest_location.key}",
             "status": "failed",
             "error": str(e),
-            "duration_seconds": 0
+            "error_type": type(e).__name__,
+            "duration_seconds": duration
         }
 
 async def run_batch_image_workflows(max_concurrent: int = 5):
@@ -136,29 +163,29 @@ async def run_batch_image_workflows(max_concurrent: int = 5):
     temporal_address = os.getenv('TEMPORAL_ADDRESS', 'localhost:7233')
     temporal_namespace = os.getenv('TEMPORAL_NAMESPACE', 'default')
     task_queue = os.getenv('TEMPORAL_TASK_QUEUE', 'image-enhancement-queue')
-    
+
     # Get batch processing configuration
     images_config = os.getenv('IMAGES_TO_PROCESS', '')
-    enhancement_prompt = os.getenv('ENHANCEMENT_PROMPT', 
+    enhancement_prompt = os.getenv('ENHANCEMENT_PROMPT',
                                  'Make this image more vibrant, increase clarity and sharpness, improve lighting')
-    
+
     # Parse image list
     images = parse_image_list(images_config)
-    
+
     if not images:
         # Fall back to single image configuration
         source_bucket = os.getenv('SOURCE_BUCKET', 'ricardotemporal')
         source_key = os.getenv('SOURCE_KEY', 'funny.png')
         dest_bucket = os.getenv('DEST_BUCKET', 'ricardotemporalprocessed')
         dest_key = os.getenv('DEST_KEY', 'enhanced_funny.png')
-        
+
         images = [{
             "source_bucket": source_bucket,
             "source_key": source_key,
             "dest_bucket": dest_bucket,
             "dest_key": dest_key
         }]
-    
+
     # AWS and OpenAI configuration
     config = ImageProcessingConfig(
         aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
@@ -166,42 +193,42 @@ async def run_batch_image_workflows(max_concurrent: int = 5):
         aws_region=os.getenv('AWS_REGION', 'us-east-1'),
         openai_api_key=os.getenv('OPENAI_API_KEY')
     )
-    
+
     # Debug: Check if credentials are loaded
     logger.info(f"AWS Region: {config.aws_region}")
     logger.info(f"AWS Access Key ID loaded: {'Yes' if config.aws_access_key_id else 'No'}")
     logger.info(f"AWS Secret Key loaded: {'Yes' if config.aws_secret_access_key else 'No'}")
     logger.info(f"OpenAI API Key loaded: {'Yes' if config.openai_api_key else 'No'}")
     logger.info(f"Processing {len(images)} images with max concurrency: {max_concurrent}")
-    
+
     try:
         # Connect to Temporal server
         client = await Client.connect(temporal_address, namespace=temporal_namespace)
-        
+
         # Process images in batches
         results = []
         semaphore = asyncio.Semaphore(max_concurrent)
-        
+
         async def process_with_semaphore(image_config):
             async with semaphore:
                 return await run_single_image_workflow(
                     client, config, image_config, task_queue, enhancement_prompt
                 )
-        
+
         # Start all workflows
         logger.info("Starting all workflows...")
         start_time = time.time()
-        
+
         tasks = [process_with_semaphore(image_config) for image_config in images]
         results = await asyncio.gather(*tasks, return_exceptions=True)
-        
+
         end_time = time.time()
         total_duration = round(end_time - start_time, 2)
-        
+
         # Process results
         successful = 0
         failed = 0
-        
+
         for i, result in enumerate(results):
             if isinstance(result, BaseException):
                 logger.error(f"Workflow {i+1} failed with exception: {result}")
@@ -214,7 +241,7 @@ async def run_batch_image_workflows(max_concurrent: int = 5):
                 failed += 1
             percent = int(((i+1)/len(results))*100)
             logger.info(f"Progress: {i+1}/{len(results)} ({percent}%)")
-        
+
         # Summary
         logger.info(f"\n" + "="*80)
         logger.info(f"BATCH PROCESSING SUMMARY")
@@ -225,9 +252,9 @@ async def run_batch_image_workflows(max_concurrent: int = 5):
         logger.info(f"Total duration: {total_duration}s")
         logger.info(f"Average per image: {round(total_duration/len(images), 2)}s")
         logger.info(f"="*80)
-        
+
         return results
-        
+
     except Exception as e:
         logger.error(f"Error running batch workflows: {e}")
         raise
@@ -239,20 +266,20 @@ async def main():
     try:
         # Get max concurrent workflows from environment
         max_concurrent = int(os.getenv('MAX_CONCURRENT_WORKFLOWS', '5'))
-        
+
         results = await run_batch_image_workflows(max_concurrent)
-        
+
         # Count successes and failures
         successful = sum(1 for r in results if isinstance(r, dict) and r.get('status') == 'success')
         total = len(results)
-        
+
         if successful == total:
             logger.info(f"All {total} images processed successfully!")
         else:
             failed = total - successful
             logger.info(f"Processed {successful}/{total} images successfully ({failed} failed)")
             exit(1)
-            
+
     except Exception as e:
         logger.error(f"Error: {e}")
         exit(1)

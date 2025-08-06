@@ -135,4 +135,7 @@ cython_debug/
 
 # Untracked .env files in subdirectories
 original/.env
-temporalized/.env 
+temporalized/.env
+
+# logs
+logs/
