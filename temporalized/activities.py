@@ -156,7 +156,7 @@ async def enhance_image_with_openai(config: ImageProcessingConfig, image_path: s
 
 @activity.defn
 async def upload_image_to_s3(config: ImageProcessingConfig, image_path: str,
-                           s3_location: S3Location, content_type: str = 'image/jpeg') -> None:
+                           s3_location: S3Location, content_type: str = 'image/jpeg') -> str:
     """
     Upload image file to S3 bucket.
 
@@ -210,13 +210,14 @@ async def upload_image_to_s3(config: ImageProcessingConfig, image_path: str,
         )
 
         logger.info("Upload completed successfully")
+        return f"s3://{s3_location.bucket}/{s3_location.key}"
 
     except ClientError as e:
         logger.error(f"Error uploading to S3 (bucket={s3_location.bucket}, key={s3_location.key}, image_path={image_path}): {e}")
         raise
 
 @activity.defn
-async def cleanup_temp_file(file_path: str) -> None:
+async def cleanup_temp_file(file_path: str) -> str:
     """
     Clean up a temporary file.
 
@@ -227,5 +228,9 @@ async def cleanup_temp_file(file_path: str) -> None:
         if os.path.exists(file_path):
             os.unlink(file_path)
             logger.info(f"Cleaned up temporary file: {file_path}")
+            return f"Deleted {file_path}"
+        else:
+            return f"File {file_path} not found"
     except Exception as e:
         logger.warning(f"Could not delete temporary file {file_path}: {e}")
+        return f"Failed to delete {file_path}: {e}"

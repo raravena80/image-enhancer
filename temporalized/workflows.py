@@ -70,7 +70,7 @@ class ImageEnhancementWorkflow:
                     download_image_from_s3,
                     args=[config, source_location],
                     start_to_close_timeout=timedelta(minutes=5),
-                    schedule_to_start_timeout=timedelta(minutes=1),
+                    schedule_to_start_timeout=timedelta(minutes=2),
                     retry_policy=retry_policy
                 )
                 workflow.logger.info(f"✅ Step 1 completed: Downloaded to {original_image_path}")
@@ -85,7 +85,7 @@ class ImageEnhancementWorkflow:
                     enhance_image_with_openai,
                     args=[config, original_image_path, enhancement_prompt],
                     start_to_close_timeout=timedelta(minutes=10),
-                    schedule_to_start_timeout=timedelta(minutes=1),
+                    schedule_to_start_timeout=timedelta(minutes=2),
                     retry_policy=retry_policy
                 )
                 workflow.logger.info(f"✅ Step 2 completed: Enhanced image saved to {enhanced_image_path}")
@@ -96,14 +96,14 @@ class ImageEnhancementWorkflow:
             # Step 3: Upload enhanced image to S3
             workflow.logger.info("📤 Step 3: Uploading enhanced image to S3")
             try:
-                await workflow.execute_activity(
+                upload_result = await workflow.execute_activity(
                     upload_image_to_s3,
                     args=[config, enhanced_image_path, dest_location, "image/png"],
                     start_to_close_timeout=timedelta(minutes=5),
-                    schedule_to_start_timeout=timedelta(minutes=1),
+                    schedule_to_start_timeout=timedelta(minutes=2),
                     retry_policy=retry_policy
                 )
-                workflow.logger.info(f"✅ Step 3 completed: Uploaded to s3://{dest_location.bucket}/{dest_location.key}")
+                workflow.logger.info(f"✅ Step 3 completed: {upload_result}")
             except Exception as e:
                 workflow.logger.error(f"❌ Step 3 failed after retries: {type(e).__name__}: {e}")
                 raise
@@ -119,22 +119,24 @@ class ImageEnhancementWorkflow:
             # Clean up temporary files (fire and forget)
             if original_image_path:
                 try:
-                    await workflow.execute_activity(
+                    cleanup_result = await workflow.execute_activity(
                         cleanup_temp_file,
                         args=[original_image_path],
                         start_to_close_timeout=timedelta(minutes=1),
                         retry_policy=RetryPolicy(maximum_attempts=1)  # Don't retry cleanup
                     )
+                    workflow.logger.info(f"Cleanup result: {cleanup_result}")
                 except Exception as e:
                     workflow.logger.warning(f"Failed to cleanup original temp file: {e}")
 
             if enhanced_image_path:
                 try:
-                    await workflow.execute_activity(
+                    cleanup_result = await workflow.execute_activity(
                         cleanup_temp_file,
                         args=[enhanced_image_path],
                         start_to_close_timeout=timedelta(minutes=1),
                         retry_policy=RetryPolicy(maximum_attempts=1)  # Don't retry cleanup
                     )
+                    workflow.logger.info(f"Cleanup result: {cleanup_result}")
                 except Exception as e:
                     workflow.logger.warning(f"Failed to cleanup enhanced temp file: {e}")
