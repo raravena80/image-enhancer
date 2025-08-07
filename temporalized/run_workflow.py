@@ -362,20 +362,20 @@ Examples:
   python run_workflow.py --max-concurrent 10 --progress
 
 Environment Variables:
-  IMAGES_TO_PROCESS       - Comma-separated list of images or JSON array
-  SOURCE_BUCKET           - Default source S3 bucket name (default: source-bucket)
-  DEST_BUCKET            - Default destination S3 bucket name (default: dest-bucket)
-  ENHANCEMENT_PROMPT     - Custom enhancement prompt
+  IMAGES_TO_PROCESS        - Comma-separated list of images or JSON array
+  SOURCE_BUCKET            - Default source S3 bucket name (default: source-bucket)
+  DEST_BUCKET              - Default destination S3 bucket name (default: dest-bucket)
+  ENHANCEMENT_PROMPT       - Custom enhancement prompt
   MAX_CONCURRENT_WORKFLOWS - Max concurrent workflows (default: 5)
-  TEMPORAL_ADDRESS       - Temporal server address (default: localhost:7233)
-  TEMPORAL_NAMESPACE     - Temporal namespace (default: default)
-  TEMPORAL_TASK_QUEUE    - Temporal task queue (default: image-enhancement-queue)
-  AWS_ACCESS_KEY_ID      - AWS credentials
-  AWS_SECRET_ACCESS_KEY  - AWS credentials
-  AWS_REGION             - AWS region (default: us-east-1)
-  OPENAI_API_KEY         - OpenAI API key
-  LOG_LEVEL              - Logging level (default: INFO)
-  TEMPORAL_DEBUG         - Enable Temporal debug logging (default: false)
+  TEMPORAL_ADDRESS         - Temporal server address (default: localhost:7233)
+  TEMPORAL_NAMESPACE       - Temporal namespace (default: default)
+  TEMPORAL_TASK_QUEUE      - Temporal task queue (default: image-enhancement-queue)
+  AWS_ACCESS_KEY_ID        - AWS credentials
+  AWS_SECRET_ACCESS_KEY    - AWS credentials
+  AWS_REGION               - AWS region (default: us-east-1)
+  OPENAI_API_KEY           - OpenAI API key
+  LOG_LEVEL                - Logging level (default: INFO)
+  TEMPORAL_DEBUG           - Enable Temporal debug logging (default: false)
         """
     )
 

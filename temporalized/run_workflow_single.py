@@ -207,7 +207,7 @@ Examples:
   python run_workflow_single.py --source-bucket my-bucket --source-key image.jpg --dest-bucket output --dest-key enhanced.jpg
 
 Environment Variables:
-  SOURCE_BUCKET           - Source S3 bucket name (default: ricardotemporal)
+  SOURCE_BUCKET          - Source S3 bucket name (default: ricardotemporal)
   SOURCE_KEY             - Source object key/path (default: funny.png)
   DEST_BUCKET            - Destination S3 bucket name (default: ricardotemporalprocessed)
   DEST_KEY               - Destination object key/path (default: enhanced_funny.png)
