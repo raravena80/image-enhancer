@@ -85,58 +85,10 @@ class ImageEnhancer:
         Returns:
             tqdm progress bar object or None if progress is disabled
         """
-        if not self.show_progress:
-            return None
+        # Disabled - using only overall progress bar to avoid conflicts
+        return None
 
-        return tqdm(
-            total=100,
-            desc=description,
-            unit="%",
-            bar_format="{l_bar}{bar}| {n_fmt}/{total_fmt} [{elapsed}<{remaining}]",
-            ncols=100,
-            leave=False,
-            dynamic_ncols=True
-        )
 
-    def _simulate_progress(self, progress_bar, duration_seconds, step_count=20):
-        """
-        Simulate progress updates for operations where we can't track actual progress.
-
-        Args:
-            progress_bar: tqdm progress bar object
-            duration_seconds: Total estimated duration
-            step_count: Number of progress updates to make
-        """
-        if not progress_bar:
-            return
-
-        step_duration = duration_seconds / step_count
-        step_size = 100 / step_count
-
-        for i in range(step_count):
-            time.sleep(step_duration)
-            progress_bar.update(step_size)
-
-        progress_bar.close()
-
-    def _quiet_logging(self):
-        """Temporarily reduce logging level during progress display."""
-        if self.show_progress:
-            logger.setLevel(logging.WARNING)
-            # Also quiet boto3 and other noisy loggers
-            logging.getLogger('boto3').setLevel(logging.WARNING)
-            logging.getLogger('botocore').setLevel(logging.WARNING)
-            logging.getLogger('urllib3').setLevel(logging.WARNING)
-            logging.getLogger('httpx').setLevel(logging.WARNING)
-
-    def _restore_logging(self):
-        """Restore original logging level."""
-        if self.show_progress:
-            logger.setLevel(self._original_log_level)
-            logging.getLogger('boto3').setLevel(logging.INFO)
-            logging.getLogger('botocore').setLevel(logging.INFO)
-            logging.getLogger('urllib3').setLevel(logging.INFO)
-            logging.getLogger('httpx').setLevel(logging.INFO)
 
     def download_image_from_s3(self, bucket_name, object_key):
         """
@@ -149,42 +101,25 @@ class ImageEnhancer:
         Returns:
             str: Path to the downloaded temporary file
         """
-        progress_bar = self._create_progress_bar("Downloading image from S3", self.step_durations['download'])
-
         try:
-            logger.info(f"Downloading image from s3://{bucket_name}/{object_key}")
-
-            if self.show_progress:
-                self._quiet_logging()
+            if not self.show_progress:
+                logger.info(f"Downloading image from s3://{bucket_name}/{object_key}")
 
             # Create a temporary file
             temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.png')
             temp_file_path = temp_file.name
             temp_file.close()
 
-            if progress_bar:
-                progress_bar.update(20)  # Show progress for temp file creation
-
             # Download the file from S3
             start_time = time.time()
             self.s3_client.download_file(bucket_name, object_key, temp_file_path)
             actual_duration = time.time() - start_time
 
-            if progress_bar:
-                progress_bar.update(80)  # Complete the progress bar
-                progress_bar.close()
-
-            if self.show_progress:
-                self._restore_logging()
-
-            logger.info(f"Image downloaded to temporary file: {temp_file_path} (took {actual_duration:.2f}s)")
+            if not self.show_progress:
+                logger.info(f"Image downloaded to temporary file: {temp_file_path} (took {actual_duration:.2f}s)")
             return temp_file_path
 
         except ClientError as e:
-            if self.show_progress:
-                self._restore_logging()
-            if progress_bar:
-                progress_bar.close()
             logger.error(f"Error downloading from S3 (bucket={bucket_name}, key={object_key}): {e}")
             raise
 
@@ -212,37 +147,22 @@ class ImageEnhancer:
         Returns:
             str: Path to the enhanced image file
         """
-        progress_bar = self._create_progress_bar("Enhancing image with OpenAI", self.step_durations['enhance'])
-
         try:
-            logger.info("Enhancing image with OpenAI...")
+            if not self.show_progress:
+                logger.info("Enhancing image with OpenAI...")
 
+            # Temporarily suppress httpx logging during OpenAI API call if progress is enabled
             if self.show_progress:
-                self._quiet_logging()
+                httpx_logger = logging.getLogger('httpx')
+                original_httpx_level = httpx_logger.level
+                httpx_logger.setLevel(logging.WARNING)
 
             # Create a temporary file for the enhanced image
             enhanced_temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.png')
             enhanced_file_path = enhanced_temp_file.name
             enhanced_temp_file.close()
 
-            if progress_bar:
-                progress_bar.update(10)  # Show progress for setup
-
             start_time = time.time()
-
-            # Start a thread to simulate progress during the OpenAI API call
-            import threading
-            if progress_bar:
-                def simulate_api_progress():
-                    # Simulate gradual progress during API call
-                    for i in range(9):  # 9 steps to reach 90% total
-                        time.sleep(self.step_durations['enhance'] / 12)  # Spread over most of the duration
-                        if progress_bar.n < 90:  # Don't exceed 90% until we're actually done
-                            progress_bar.update(10)
-
-                progress_thread = threading.Thread(target=simulate_api_progress)
-                progress_thread.daemon = True
-                progress_thread.start()
 
             response = self.openai_client.images.edit(
                 image=open(image_path, 'rb'),
@@ -254,6 +174,10 @@ class ImageEnhancer:
 
             actual_duration = time.time() - start_time
 
+            # Restore httpx logging level
+            if self.show_progress:
+                httpx_logger.setLevel(original_httpx_level)
+
             # Check if response is valid and get the enhanced image base64
             if not response or not response.data:
                 raise Exception("OpenAI API returned no data")
@@ -261,31 +185,22 @@ class ImageEnhancer:
             if not enhanced_image_base64:
                 raise Exception("No base64 image data returned from OpenAI")
 
-            if progress_bar:
-                # Ensure we're at least at 90% before final steps
-                progress_bar.n = max(progress_bar.n, 90)
-                progress_bar.refresh()
-
             # Download the enhanced image to the temporary file
             enhanced_image_data = base64.b64decode(enhanced_image_base64)
             with open(enhanced_file_path, 'wb') as f:
                 f.write(enhanced_image_data)
 
-            if progress_bar:
-                progress_bar.update(100 - progress_bar.n)  # Complete the progress bar
-                progress_bar.close()
-
-            if self.show_progress:
-                self._restore_logging()
-
-            logger.info(f"Image enhancement completed: {enhanced_file_path} (took {actual_duration:.2f}s)")
+            if not self.show_progress:
+                logger.info(f"Image enhancement completed: {enhanced_file_path} (took {actual_duration:.2f}s)")
             return enhanced_file_path
 
         except Exception as e:
+            # Restore httpx logging level in case of error
             if self.show_progress:
-                self._restore_logging()
-            if progress_bar:
-                progress_bar.close()
+                try:
+                    httpx_logger.setLevel(original_httpx_level)
+                except:
+                    pass
             logger.error(f"Error enhancing image with OpenAI (image_path={image_path}, prompt={enhancement_prompt}): {e}")
             raise
 
@@ -299,13 +214,9 @@ class ImageEnhancer:
             object_key: Key/path for the object in S3
             content_type: MIME type of the image
         """
-        progress_bar = self._create_progress_bar("Uploading enhanced image to S3", self.step_durations['upload'])
-
         try:
-            logger.info(f"Uploading processed image to s3://{bucket_name}/{object_key}")
-
-            if self.show_progress:
-                self._quiet_logging()
+            if not self.show_progress:
+                logger.info(f"Uploading processed image to s3://{bucket_name}/{object_key}")
 
             # Determine content type based on file extension if not provided
             if content_type == 'image/jpeg':
@@ -313,9 +224,6 @@ class ImageEnhancer:
                     content_type = 'image/png'
                 elif image_path.lower().endswith('.webp'):
                     content_type = 'image/webp'
-
-            if progress_bar:
-                progress_bar.update(20)  # Show progress for content type detection
 
             # Upload the file to S3
             start_time = time.time()
@@ -327,20 +235,10 @@ class ImageEnhancer:
             )
             actual_duration = time.time() - start_time
 
-            if progress_bar:
-                progress_bar.update(80)  # Complete the progress bar
-                progress_bar.close()
-
-            if self.show_progress:
-                self._restore_logging()
-
-            logger.info(f"Upload completed successfully (took {actual_duration:.2f}s)")
+            if not self.show_progress:
+                logger.info(f"Upload completed successfully (took {actual_duration:.2f}s)")
 
         except ClientError as e:
-            if self.show_progress:
-                self._restore_logging()
-            if progress_bar:
-                progress_bar.close()
             logger.error(f"Error uploading to S3 (bucket={bucket_name}, key={object_key}, image_path={image_path}): {e}")
             raise
 
@@ -355,7 +253,8 @@ class ImageEnhancer:
             try:
                 if os.path.exists(file_path):
                     os.unlink(file_path)
-                    logger.info(f"Cleaned up temporary file: {file_path}")
+                    if not self.show_progress:
+                        logger.info(f"Cleaned up temporary file: {file_path}")
             except Exception as e:
                 logger.warning(f"Could not delete temporary file {file_path}: {e}")
 
@@ -386,9 +285,7 @@ class ImageEnhancer:
                 unit="step",
                 bar_format="{l_bar}{bar}| {n_fmt}/{total_fmt} steps [{elapsed}<{remaining}]",
                 ncols=100,
-                position=0,
-                leave=True,
-                dynamic_ncols=True
+                leave=True
             )
 
         try:
@@ -422,14 +319,15 @@ class ImageEnhancer:
                 overall_progress.close()
                 print(f"\n✅ Successfully processed image in {total_time:.2f} seconds!")
                 print(f"   Source: s3://{source_bucket}/{source_key}")
-                print(f"   Destination: s3://{dest_bucket}/{dest_key}")
+                print(f"   Destination: s3://{dest_bucket}/{dest_key}\n")
 
-            logger.info(f"Successfully processed image: {source_bucket}/{source_key} -> {dest_bucket}/{dest_key} (total time: {total_time:.2f}s)")
+            if not self.show_progress:
+                logger.info(f"Successfully processed image: {source_bucket}/{source_key} -> {dest_bucket}/{dest_key} (total time: {total_time:.2f}s)")
 
         except Exception as e:
             if overall_progress:
                 overall_progress.close()
-                print(f"\nError during image processing: {e}")
+                print(f"\n❌ Error during image processing: {e}\n")
             logger.error(f"Error in image processing workflow (source={source_bucket}/{source_key}, dest={dest_bucket}/{dest_key}, step=process_image): {e}")
             raise
         finally:

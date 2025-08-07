@@ -64,6 +64,7 @@ async def main():
             # Reduce concurrent tasks to minimize conflicts
             max_concurrent_workflow_tasks=1,  # Limit concurrent workflow tasks per worker
             max_concurrent_activities=3,      # Limit concurrent activities
+            max_cached_workflows=0,           # Disable sticky workers
         )
 
         logger.info("Starting worker...")
