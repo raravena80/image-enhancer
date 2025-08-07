@@ -215,7 +215,9 @@ async def run_batch_image_workflows(max_concurrent: int = 5, show_progress: bool
         aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
         aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY'),
         aws_region=os.getenv('AWS_REGION', 'us-east-1'),
-        openai_api_key=os.getenv('OPENAI_API_KEY')
+        openai_api_key=os.getenv('OPENAI_API_KEY'),
+        openai_model=os.getenv('OPENAI_MODEL', 'gpt-image-1'),
+        openai_size=os.getenv('OPENAI_SIZE', '1024x1024')
     )
 
     if not show_progress:
@@ -362,21 +364,22 @@ Examples:
   python run_workflow.py --max-concurrent 10 --progress
 
 Environment Variables:
-  IMAGES_TO_PROCESS        - Comma-separated list of images or JSON array
-  SOURCE_BUCKET            - Default source S3 bucket name (default: source-bucket)
-  DEST_BUCKET              - Default destination S3 bucket name (default: dest-bucket)
-  ENHANCEMENT_PROMPT       - Custom enhancement prompt
-  MAX_CONCURRENT_WORKFLOWS - Max concurrent workflows (default: 5)
-  TEMPORAL_ADDRESS         - Temporal server address (default: localhost:7233)
-  TEMPORAL_NAMESPACE       - Temporal namespace (default: default)
-  TEMPORAL_TASK_QUEUE      - Temporal task queue (default: image-enhancement-queue)
-  AWS_ACCESS_KEY_ID        - AWS credentials
-  AWS_SECRET_ACCESS_KEY    - AWS credentials
-  AWS_REGION               - AWS region (default: us-east-1)
-  OPENAI_API_KEY           - OpenAI API key
-  LOG_LEVEL                - Logging level (default: INFO)
-  TEMPORAL_DEBUG           - Enable Temporal debug logging (default: false)
-        """
+   IMAGES_TO_PROCESS        - Comma-separated list of images or JSON array
+   SOURCE_BUCKET            - Default source S3 bucket name (default: source-bucket)
+   DEST_BUCKET              - Default destination S3 bucket name (default: dest-bucket)
+   ENHANCEMENT_PROMPT       - Custom enhancement prompt
+   MAX_CONCURRENT_WORKFLOWS - Max concurrent workflows (default: 5)
+   TEMPORAL_ADDRESS         - Temporal server address (default: localhost:7233)
+   TEMPORAL_NAMESPACE       - Temporal namespace (default: default)
+   TEMPORAL_TASK_QUEUE      - Temporal task queue (default: image-enhancement-queue)
+   AWS_ACCESS_KEY_ID        - AWS credentials
+   AWS_SECRET_ACCESS_KEY    - AWS credentials
+   AWS_REGION               - AWS region (default: us-east-1)
+   OPENAI_API_KEY           - OpenAI API key
+   OPENAI_MODEL             - OpenAI image model (default: gpt-image-1)
+   OPENAI_SIZE              - Image size for OpenAI generation (default: 1024x1024)
+   LOG_LEVEL                - Logging level (default: INFO)
+   TEMPORAL_DEBUG           - Enable Temporal debug logging (default: false)        """
     )
 
     parser.add_argument('--images',
@@ -386,6 +389,10 @@ Environment Variables:
                        help='Maximum number of concurrent workflows')
     parser.add_argument('--enhancement-prompt',
                        help='Custom enhancement prompt')
+    parser.add_argument('--openai-model',
+                       help='OpenAI image model to use (default: gpt-image-1)')
+    parser.add_argument('--openai-size',
+                       help='Image size for OpenAI generation (default: 1024x1024)')
 
     # Progress bar option
     progress_group = parser.add_mutually_exclusive_group()
@@ -410,6 +417,10 @@ Environment Variables:
         os.environ['MAX_CONCURRENT_WORKFLOWS'] = str(args.max_concurrent)
     if args.enhancement_prompt:
         os.environ['ENHANCEMENT_PROMPT'] = args.enhancement_prompt
+    if args.openai_model:
+        os.environ['OPENAI_MODEL'] = args.openai_model
+    if args.openai_size:
+        os.environ['OPENAI_SIZE'] = args.openai_size
 
     try:
         # Get max concurrent workflows from environment or args

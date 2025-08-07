@@ -34,7 +34,8 @@ load_dotenv()
 
 class ImageEnhancer:
     def __init__(self, aws_access_key_id=None, aws_secret_access_key=None,
-                 aws_region='us-east-1', openai_api_key=None, show_progress=True):
+                 aws_region='us-east-1', openai_api_key=None, show_progress=True,
+                 openai_model='gpt-image-1', openai_size='1024x1024'):
         """
         Initialize the ImageEnhancer with AWS and OpenAI credentials.
 
@@ -44,6 +45,8 @@ class ImageEnhancer:
             aws_region: AWS region
             openai_api_key: OpenAI API key (if None, uses environment variable)
             show_progress: Whether to display progress bars during operations
+            openai_model: OpenAI image model to use (default: gpt-image-1)
+            openai_size: Image size for OpenAI generation (default: 1024x1024)
         """
         # Initialize AWS S3 client
         if aws_access_key_id and aws_secret_access_key:
@@ -63,6 +66,10 @@ class ImageEnhancer:
 
         # Progress configuration
         self.show_progress = show_progress
+
+        # OpenAI configuration
+        self.openai_model = openai_model
+        self.openai_size = openai_size
 
         # Estimated durations for each step (in seconds) - these can be tuned based on experience
         self.step_durations = {
@@ -168,8 +175,8 @@ class ImageEnhancer:
                 image=open(image_path, 'rb'),
                 prompt=enhancement_prompt,
                 n=1,
-                size="1024x1024",
-                model="gpt-image-1"
+                size=self.openai_size,
+                model=self.openai_model
             )
 
             actual_duration = time.time() - start_time
@@ -355,16 +362,17 @@ Examples:
   SOURCE_BUCKET=my-bucket SOURCE_KEY=image.jpg python image-enhancer.py --dest-bucket output-bucket --dest-key enhanced.jpg
 
 Environment Variables:
-  SOURCE_BUCKET        - Source S3 bucket name
-  SOURCE_KEY          - Source object key/path
-  DEST_BUCKET         - Destination S3 bucket name
-  DEST_KEY            - Destination object key/path
-  ENHANCEMENT_PROMPT  - Custom enhancement prompt
-  AWS_ACCESS_KEY_ID   - AWS credentials
-  AWS_SECRET_ACCESS_KEY - AWS credentials
-  AWS_DEFAULT_REGION  - AWS region (default: us-east-1)
-  OPENAI_API_KEY      - OpenAI API key
-        """
+   SOURCE_BUCKET         - Source S3 bucket name
+   SOURCE_KEY            - Source object key/path
+   DEST_BUCKET           - Destination S3 bucket name
+   DEST_KEY              - Destination object key/path
+   ENHANCEMENT_PROMPT    - Custom enhancement prompt
+   AWS_ACCESS_KEY_ID     - AWS credentials
+   AWS_SECRET_ACCESS_KEY - AWS credentials
+   AWS_DEFAULT_REGION    - AWS region (default: us-east-1)
+   OPENAI_API_KEY        - OpenAI API key
+   OPENAI_MODEL          - OpenAI image model (default: gpt-image-1)
+   OPENAI_SIZE           - Image size for OpenAI generation (default: 1024x1024)        """
     )
 
     parser.add_argument('--source-bucket',
@@ -380,6 +388,12 @@ Environment Variables:
     parser.add_argument('--aws-region',
                        default='us-east-1',
                        help='AWS region (default: us-east-1)')
+    parser.add_argument('--openai-model',
+                       default='gpt-image-1',
+                       help='OpenAI image model to use (default: gpt-image-1)')
+    parser.add_argument('--openai-size',
+                       default='1024x1024',
+                       help='Image size for OpenAI generation (default: 1024x1024)')
 
     # Progress bar option
     progress_group = parser.add_mutually_exclusive_group()
@@ -425,7 +439,9 @@ Environment Variables:
             aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
             aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY"),
             aws_region=args.aws_region,
-            show_progress=args.progress  # Use command line argument
+            show_progress=args.progress,  # Use command line argument
+            openai_model=args.openai_model,
+            openai_size=args.openai_size
         )
 
         # Process the image

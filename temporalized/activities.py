@@ -31,6 +31,8 @@ class ImageProcessingConfig:
     aws_secret_access_key: Optional[str] = None
     aws_region: str = 'us-east-1'
     openai_api_key: Optional[str] = None
+    openai_model: str = 'gpt-image-1'
+    openai_size: str = '1024x1024'
 
 @dataclass
 class S3Location:
@@ -131,8 +133,8 @@ async def enhance_image_with_openai(config: ImageProcessingConfig, image_path: s
             image=open(image_path, 'rb'),
             prompt=enhancement_prompt,
             n=1,
-            size="1024x1024",
-            model="gpt-image-1"
+            size=config.openai_size,
+            model=config.openai_model
         )
 
         # Check if response is valid and get the enhanced image base64

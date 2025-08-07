@@ -65,7 +65,9 @@ async def run_image_enhancement_workflow(show_progress=False):
         aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
         aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY'),
         aws_region=os.getenv('AWS_REGION', 'us-east-1'),
-        openai_api_key=os.getenv('OPENAI_API_KEY')
+        openai_api_key=os.getenv('OPENAI_API_KEY'),
+        openai_model=os.getenv('OPENAI_MODEL', 'gpt-image-1'),
+        openai_size=os.getenv('OPENAI_SIZE', '1024x1024')
     )
 
     # Debug: Check if credentials are loaded
@@ -207,20 +209,21 @@ Examples:
   python run_workflow_single.py --source-bucket my-bucket --source-key image.jpg --dest-bucket output --dest-key enhanced.jpg
 
 Environment Variables:
-  SOURCE_BUCKET          - Source S3 bucket name (default: ricardotemporal)
-  SOURCE_KEY             - Source object key/path (default: funny.png)
-  DEST_BUCKET            - Destination S3 bucket name (default: ricardotemporalprocessed)
-  DEST_KEY               - Destination object key/path (default: enhanced_funny.png)
-  ENHANCEMENT_PROMPT     - Custom enhancement prompt
-  TEMPORAL_ADDRESS       - Temporal server address (default: localhost:7233)
-  TEMPORAL_NAMESPACE     - Temporal namespace (default: default)
-  TEMPORAL_TASK_QUEUE    - Temporal task queue (default: image-enhancement-queue)
-  AWS_ACCESS_KEY_ID      - AWS credentials
-  AWS_SECRET_ACCESS_KEY  - AWS credentials
-  AWS_REGION             - AWS region (default: us-east-1)
-  OPENAI_API_KEY         - OpenAI API key
-  LOG_LEVEL              - Logging level (default: INFO)
-        """
+   SOURCE_BUCKET          - Source S3 bucket name (default: ricardotemporal)
+   SOURCE_KEY             - Source object key/path (default: funny.png)
+   DEST_BUCKET            - Destination S3 bucket name (default: ricardotemporalprocessed)
+   DEST_KEY               - Destination object key/path (default: enhanced_funny.png)
+   ENHANCEMENT_PROMPT     - Custom enhancement prompt
+   TEMPORAL_ADDRESS       - Temporal server address (default: localhost:7233)
+   TEMPORAL_NAMESPACE     - Temporal namespace (default: default)
+   TEMPORAL_TASK_QUEUE    - Temporal task queue (default: image-enhancement-queue)
+   AWS_ACCESS_KEY_ID      - AWS credentials
+   AWS_SECRET_ACCESS_KEY  - AWS credentials
+   AWS_REGION             - AWS region (default: us-east-1)
+   OPENAI_API_KEY         - OpenAI API key
+   OPENAI_MODEL           - OpenAI image model (default: gpt-image-1)
+   OPENAI_SIZE            - Image size for OpenAI generation (default: 1024x1024)
+   LOG_LEVEL              - Logging level (default: INFO)        """
     )
 
     parser.add_argument('--source-bucket',
@@ -233,6 +236,10 @@ Environment Variables:
                        help='Destination object key/path')
     parser.add_argument('--enhancement-prompt',
                        help='Custom enhancement prompt')
+    parser.add_argument('--openai-model',
+                       help='OpenAI image model to use (default: gpt-image-1)')
+    parser.add_argument('--openai-size',
+                       help='Image size for OpenAI generation (default: 1024x1024)')
 
     # Progress bar option
     progress_group = parser.add_mutually_exclusive_group()
@@ -261,6 +268,10 @@ Environment Variables:
         os.environ['DEST_KEY'] = args.dest_key
     if args.enhancement_prompt:
         os.environ['ENHANCEMENT_PROMPT'] = args.enhancement_prompt
+    if args.openai_model:
+        os.environ['OPENAI_MODEL'] = args.openai_model
+    if args.openai_size:
+        os.environ['OPENAI_SIZE'] = args.openai_size
 
     try:
         result = await run_image_enhancement_workflow(show_progress=args.progress)
